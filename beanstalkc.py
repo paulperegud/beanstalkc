@@ -218,6 +218,21 @@ class Job(object):
         return self.conn.stats_job(self.jid)
 
 
+class YamlParseException(BeanstalkcException): pass
+
+
+def parse_yaml_stupid(data):
+    try:
+        lines = data.split('\n')[1:-1] # skip leading '---' and trailing empty
+        if lines[0].startswith('- '):
+            return list(line[2:] for line in lines)
+        if ':' in lines[0]:
+            return dict(tuple(line.split(': ')) for line in lines)
+    except Exception, e:
+        raise YamlParseException(data, e)
+    raise YamlParseException(data, None)
+
+
 if __name__ == '__main__':
     import doctest, os, signal
     try:
