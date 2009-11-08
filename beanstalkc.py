@@ -36,8 +36,10 @@ class DeadlineSoon(BeanstalkcException): pass
 
 class Connection(object):
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, parse_yaml=True):
-        if parse_yaml:
+        if isinstance(parse_yaml, bool) and parse_yaml == True:
             self.parse_yaml = __import__('yaml').load
+        elif hasattr(parse_yaml, '__call__'):
+            self.parse_yaml = parse_yaml
         else:
             self.parse_yaml = lambda x: x
         self.host = host
