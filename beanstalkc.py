@@ -19,6 +19,7 @@ limitations under the License.
 
 __version__ = '0.1.1'
 
+import logging
 import socket
 
 
@@ -36,12 +37,13 @@ class DeadlineSoon(BeanstalkcException): pass
 
 class Connection(object):
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, parse_yaml=True):
-        if isinstance(parse_yaml, bool) and parse_yaml == True:
-            self.parse_yaml = __import__('yaml').load
-        elif hasattr(parse_yaml, '__call__'):
-            self.parse_yaml = parse_yaml
-        else:
-            self.parse_yaml = lambda x: x
+        if parse_yaml is True:
+            try:
+                parse_yaml = __import__('yaml').load
+            except ImportError:
+                logging.warning('Failed to load PyYAML, will not parse YAML')
+                parse_yaml = False
+        self.parse_yaml = parse_yaml or (lambda x: x)
         self.host = host
         self.port = port
         self.connect()
