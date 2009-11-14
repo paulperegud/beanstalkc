@@ -421,6 +421,21 @@ when creating the `Connection`:
 
     >>> beanstalk.close()
 
+@@ WORK IN PROGRESS: test `parse_yaml_stupid`
+
+    >>> beanstalk = beanstalkc.Connection(host='localhost', port=14711, parse_yaml=beanstalkc.parse_yaml_stupid)
+    >>> beanstalk.put('foo')
+    11
+    >>> job = beanstalk.reserve()
+    >>> pprint(job.stats())
+    {'age': '0',
+     ...
+     'id': '11',
+     ...
+     'state': 'reserved',
+     ...
+     'tube': 'default'}
+
 This possibility is mostly useful if you don't use the introspective
 capabilities of beanstalkd (`Connection#tubes`, `Connection#watching`,
 `Connection#stats`, `Connection#stats_tube`, and `Job#stats`).
