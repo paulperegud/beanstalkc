@@ -42,8 +42,101 @@ class SocketError(BeanstalkcException):
         except socket.error, e:
             raise SocketError(e)
 
-
 class Connection(object):
+    def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, parse_yaml=False, options=False):
+        self.conns = []
+        self.current = 0
+        if not options:
+            self.conns.append(Connection_(host, port, parse_yaml))
+        else:
+            for param in options:
+                self.conns.append(Connection_(param['host'], param['port']))
+        self.c = self.conns[self.current]
+        return None
+
+    def close(self):
+        return self._each('close')
+
+    def put(self, body, priority=DEFAULT_PRIORITY, delay=0, ttr=DEFAULT_TTR):
+        put_conn = self.conns[0]
+        return put_conn.put(body, priority, delay, ttr)
+
+    def reserve(self, timeout=None):
+        self._next()
+        a = self.c.reserve(timeout)
+        return a
+
+    def kick(self, bound=1):
+        return self.c.kick(bound)
+
+    def peek(self, jid):
+        return self.c.peek(jid)
+
+    def peek_ready(self):
+        return self.c.peek_ready()
+
+    def peek_delayed(self):
+        return self.c.peek_delayed()
+
+    def peek_buried(self):
+        return self.c.peek_buried()
+
+    def tubes(self):
+        return self.c.tubes()
+
+    def using(self):
+        return self.c.using()
+
+    def use(self, name):
+        self._each('use', [name])
+
+    def watching(self):
+        return self.c.watching(bound)
+
+    def watch(self, name):
+        return self._each('watch', [name])
+
+    def ignore(self, name):
+        return self._each('ignore', [name])
+
+    def stats(self):
+        return self.c.stats()
+
+    def stats_tube(self, name):
+        return self.c.stats_tube(name)
+
+    def pause_tube(self, name, delay):
+        return self.c.pause_tube(name, delay)
+
+    # -- job interactors --
+
+    def delete(self, jid):
+        return self.c.kick(jid)
+
+    def release(self, jid, priority=None, delay=0):
+        return self.c.release(jid, priority, delay)
+
+    def bury(self, jid, priority=None):
+        return self.c.bury(jid, priority)
+
+    def touch(self, jid):
+        return self.c.touch(jid)
+
+    def stats_job(self, jid):
+        return self.c.stats_job(jid)
+
+    def _each(self, method, params=[]):
+        return [getattr(conn, method)(*params) for conn in self.conns]
+
+
+    def _next(self):
+        self.current = (self.current+1)%len(self.conns)
+        self.c = self.conns[self.current]
+        return self
+
+
+
+class Connection_(object):
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, parse_yaml=True):
         if parse_yaml is True:
             try:
