@@ -43,6 +43,10 @@ class SocketError(BeanstalkcException):
             raise SocketError(e)
 
 class Connection(object):
+
+    using_cached = "default"
+    watching_cached = "default"
+
     def __init__(self, host=DEFAULT_HOST, port=DEFAULT_PORT, parse_yaml=False, options=False):
         self.conns = []
         self.current = 0
@@ -88,12 +92,14 @@ class Connection(object):
         return self.c.using()
 
     def use(self, name):
+        self.using_cached = name
         self._each('use', [name])
 
     def watching(self):
         return self.c.watching(bound)
 
     def watch(self, name):
+        self.watching_cached = name
         return self._each('watch', [name])
 
     def ignore(self, name):
